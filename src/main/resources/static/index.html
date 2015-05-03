@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Bootstrap 101 Template</title>
+    <title>Amazon Echo Bridge Manager</title>
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -43,33 +43,15 @@
             title: 'Home Automation Gateways',
             actions: {
                 listAction: function (postData, jtParams) {
-    return $.Deferred(function ($dfd) {
-        $.ajax({
-            url: '/api/gateways',
-            type: 'GET',
-            dataType: 'json',
-            data: postData,
-            success: function (data) {
-                var bacon = { Result:"OK", Records:data[0].content };
-                $dfd.resolve(bacon);
-            },
-            error: function () {
-                $dfd.reject();
-            }
-        });
-    });
-},
-                createAction: function (postData) {
-                    console.log("creating from custom function...");
-                    console.log(postData);
                     return $.Deferred(function ($dfd) {
                         $.ajax({
-                            url: '/api/gateways ',
-                            type: 'POST',
+                            url: '/api/gateways',
+                            type: 'GET',
                             dataType: 'json',
                             data: postData,
                             success: function (data) {
-                                $dfd.resolve(data);
+                                var bacon = { Result:"OK", Records:data[0].content };
+                                $dfd.resolve(bacon);
                             },
                             error: function () {
                                 $dfd.reject();
@@ -77,7 +59,52 @@
                         });
                     });
                 },
-                deleteAction: '/GettingStarted/DeletePerson'
+                createAction: function (postData) {
+                    var paramArray = $("#jtable-create-form").serializeArray();
+                    var name, type, address;
+                    for(var i  = 0; i < paramArray.length; i++){
+                        var element = paramArray[i];
+                        if(element.name == 'name'){
+                            name = element.value;
+                        }else if(element.name == 'type'){
+                            type = element.value;
+                        }else if(element.name == 'address'){
+                            address = element.value;
+                        }
+                    }
+                    var requestObject = { name:name, type:type, address:address };
+                    return $.Deferred(function ($dfd) {
+                        $.ajax({
+                            url: '/api/gateways ',
+                            type: 'POST',
+                            dataType: 'json',
+                            contentType: 'application/json',
+                            data: JSON.stringify(requestObject),
+                            success: function (data) {
+                                var createTranslated = { Result:"OK", Record:data };
+                                $dfd.resolve(createTranslated);
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+                deleteAction: function (postData, jtParams) {
+                    return $.Deferred(function ($dfd) {
+                        $.ajax({
+                            url: '/api/gateways/' + postData.id,
+                            type: 'DELETE',
+                            success: function (data) {
+                                var bacon = { Result:"OK" };
+                                $dfd.resolve(bacon);
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                }
             },
            fields: {
                 id: {

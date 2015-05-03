@@ -75,5 +75,14 @@ public class GatewayResource {
         return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
+    @RequestMapping(value = "/{gatewayId}", method = RequestMethod.DELETE, produces = "application/json")
+    public ResponseEntity<String> deleteGatewayById(@PathVariable("gatewayId") String id){
+        HAGatewayDao deleted = gatewayRepository.findOne(id);
+        if(deleted == null){
+            return new ResponseEntity<>(null, null, HttpStatus.NOT_FOUND);
+        }
+        gatewayRepository.delete(deleted);
+        return new ResponseEntity<>(null, null, HttpStatus.OK);
+    }
 
 }
