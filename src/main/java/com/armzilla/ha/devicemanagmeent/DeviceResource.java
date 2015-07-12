@@ -34,6 +34,10 @@ public class DeviceResource {
         deviceEntry.setDeviceType(device.getDeviceType());
         deviceEntry.setOnUrl(device.getOnUrl());
         deviceEntry.setOffUrl(device.getOffUrl());
+        deviceEntry.setOnMethod(device.getOnMethod());
+        deviceEntry.setOffMethod(device.getOffMethod());
+        deviceEntry.setOnData(device.getOnData());
+        deviceEntry.setOffData(device.getOffData());
 
         deviceRepository.save(deviceEntry);
 

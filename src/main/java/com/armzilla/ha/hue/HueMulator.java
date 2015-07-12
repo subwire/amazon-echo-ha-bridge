@@ -7,8 +7,11 @@ import com.armzilla.ha.dao.*;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpResponse;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
@@ -126,12 +129,18 @@ public class HueMulator {
 
         String responseString;
         String url;
+        String method;
+        String data;
         if (state.isOn()) {
             responseString = "[{\"success\":{\"/lights/" + lightId + "/state/on\":true}}]";
             url = device.getOnUrl();
+            method = device.getOnMethod();
+            data = device.getOnData();
         } else {
             responseString = "[{\"success\":{\"/lights/" + lightId + "/state/on\":false}}]";
             url = device.getOffUrl();
+            method = device.getOffMethod();
+            data = device.getOffData();
         }
 
         /* light weight templating here, was going to use free marker but it was a bit too
@@ -151,14 +160,67 @@ public class HueMulator {
         }
 
         //make call
-        if(!doHttpGETRequest(url)){
-            return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
+        if(method.equals("GET")) {
+            if(!doHttpGETRequest(url)){
+                return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
+            }
         }
-
+        else if(method.equals("PUT")) {
+            if(!doHttpPUTRequest(url,data)){
+                return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
+            }
+        }
+        else if(method.equals("POST")) {
+            if(!doHttpPOSTRequest(url,data)){
+               return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
+            }
+        }
         HttpHeaders headerMap = new HttpHeaders();
 
         ResponseEntity<String> entity = new ResponseEntity<>(responseString, headerMap, HttpStatus.OK);
         return entity;
+    }
+
+
+    protected boolean doHttpPUTRequest(String url, String data) {
+        log.info("calling PUT on URL: " + url);
+        log.info("DATA: " + data);
+        HttpPut httpPut = new HttpPut(url);
+        try {
+            StringEntity params = new StringEntity(data);
+            httpPut.addHeader("content-type", "application/x-www-form-urlencoded");
+            httpPut.setEntity(params);
+            HttpResponse response = httpClient.execute(httpPut);
+            EntityUtils.consume(response.getEntity()); //close out inputstream ignore content
+            log.info("POST on URL responded: " + response.getStatusLine().getStatusCode());
+            if(response.getStatusLine().getStatusCode() == 200){
+                return true;
+            }
+        } catch (IOException e) {
+            log.error("Error calling out to HA gateway", e);
+        }
+        return false;
+    }
+
+
+    protected boolean doHttpPOSTRequest(String url, String data) {
+        log.info("calling POST on URL: " + url);
+        log.info("POSTDATA: " + data);
+        HttpPost httpPost = new HttpPost(url);
+        try {
+            StringEntity params = new StringEntity(data);
+            httpPost.addHeader("content-type", "application/x-www-form-urlencoded");
+            httpPost.setEntity(params);
+            HttpResponse response = httpClient.execute(httpPost);
+            EntityUtils.consume(response.getEntity()); //close out inputstream ignore content
+            log.info("POST on URL responded: " + response.getStatusLine().getStatusCode());
+            if(response.getStatusLine().getStatusCode() == 200){
+                return true;
+            }
+        } catch (IOException e) {
+            log.error("Error calling out to HA gateway", e);
+        }
+        return false;
     }
 
     protected boolean doHttpGETRequest(String url) {
