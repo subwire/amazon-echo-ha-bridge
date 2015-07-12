@@ -162,16 +162,19 @@ public class HueMulator {
         //make call
         if(method.equals("GET")) {
             if(!doHttpGETRequest(url)){
+                log.error("GET request failed");
                 return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
             }
         }
         else if(method.equals("PUT")) {
             if(!doHttpPUTRequest(url,data)){
+                log.error("PUT request failed");
                 return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
             }
         }
         else if(method.equals("POST")) {
             if(!doHttpPOSTRequest(url,data)){
+               log.error("POST request failed");
                return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
             }
         }
@@ -191,8 +194,8 @@ public class HueMulator {
             httpPut.addHeader("content-type", "application/x-www-form-urlencoded");
             httpPut.setEntity(params);
             HttpResponse response = httpClient.execute(httpPut);
-            EntityUtils.consume(response.getEntity()); //close out inputstream ignore content
-            log.info("POST on URL responded: " + response.getStatusLine().getStatusCode());
+            String body = EntityUtils.toString(response.getEntity()); //close out inputstream ignore content
+            log.info("PUT on URL responded: " + body);
             if(response.getStatusLine().getStatusCode() == 200){
                 return true;
             }
